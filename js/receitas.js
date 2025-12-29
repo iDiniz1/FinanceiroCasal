@@ -1,111 +1,109 @@
-// Array em memória (vem do Firebase)
-let receitas = [];
+import { db } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const painel = document.getElementById("painel");
+const receitasRef = collection(db, "receitas");
+
+// 🔥 ARRAY GLOBAL REAL
+window.receitas = [];
+
+// 🔥 ESCUTA EM TEMPO REAL
+onSnapshot(receitasRef, (snapshot) => {
+  window.receitas = snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data()
+  }));
+
+  // só redesenha se o usuário estiver na aba receitas
+  if (painel.innerHTML.includes("Adicionar")) {
+    listarReceitas();
+  }
+});
 
 // LISTAR RECEITAS
-async function listarReceitas() {
-    const painel = document.getElementById("painel");
+window.listarReceitas = function () {
+  painel.innerHTML = `
+    <br>Descrição: <input id="inp_descricao">
+    <br>Valor: <input id="inp_valor">
+    <br><button onclick="AdicionarReceita()">Adicionar</button>
+  `;
 
-    painel.innerHTML = `
-        <br> Descrição: <input id="inp_descricao">
-        <br> Valor: <input id="inp_valor">
-        <br> <button onclick="AdicionarReceita()">Adicionar</button>
+  let total = 0;
+
+  window.receitas.forEach((r, i) => {
+    total += r.valor;
+
+    painel.innerHTML += `
+      <p>
+        <button class="btn-acao" onclick="carregarReceita(${i})">✏️</button>
+        <button class="btn-acao excluir" onclick="excluirReceita(${i})">✖️</button>
+        ${r.descricao} - R$ ${r.valor.toFixed(2)}
+      </p>
     `;
+  });
 
-    receitas = [];
-    let total = 0;
+  painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`;
+};
 
-    // Busca dados no Firebase
-    const snapshot = await getDocs(collection(db, "receitas"));
+// ADICIONAR
+window.AdicionarReceita = async function () {
+  const descricao = document.getElementById("inp_descricao").value;
+  const valor = Number(document.getElementById("inp_valor").value);
 
-    snapshot.forEach((docSnap) => {
-        receitas.push({
-            id: docSnap.id,
-            ...docSnap.data()
-        });
-    });
+  if (descricao === "") {
+    alert("Descrição inválida.");
+    return;
+  }
 
-    // Renderiza na tela
-    for (let i = 0; i < receitas.length; i++) {
-        total += receitas[i].valor;
+  if (valor <= 0 || isNaN(valor)) {
+    alert("Valor inválido.");
+    return;
+  }
 
-        painel.innerHTML += `
-            <p>
-                <button class="btn-acao" onclick="carregarReceita(${i})">✏️</button>
-                <button class="btn-acao excluir" onclick="excluirReceita(${i})">✖️</button>
-                ${receitas[i].descricao} - R$ ${receitas[i].valor.toFixed(2)}
-            </p>
-        `;
-    }
+  await addDoc(receitasRef, {
+    descricao,
+    valor,
+    criadoEm: new Date()
+  });
+};
 
-    painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`;
-}
+// CARREGAR PARA EDIÇÃO
+window.carregarReceita = function (index) {
+  painel.innerHTML = `
+    <br>Descrição: <input id="inp_descricao" value="${window.receitas[index].descricao}">
+    <br>Valor: <input id="inp_valor" value="${window.receitas[index].valor}">
+    <br><button onclick="AlterarReceita(${index})">Alterar</button>
+  `;
+};
 
-// ADICIONAR RECEITA
-async function AdicionarReceita() {
-    const descricao = document.getElementById("inp_descricao").value;
-    const valor = Number(document.getElementById("inp_valor").value);
+// ALTERAR
+window.AlterarReceita = async function (index) {
+  const descricao = document.getElementById("inp_descricao").value;
+  const valor = Number(document.getElementById("inp_valor").value);
 
-    if (descricao === "") {
-        alert("Descrição inválida.");
-        return;
-    }
+  if (descricao === "" || valor <= 0 || isNaN(valor)) {
+    alert("Dados inválidos.");
+    return;
+  }
 
-    if (valor <= 0 || isNaN(valor)) {
-        alert("Valor inválido.");
-        return;
-    }
+  await updateDoc(
+    doc(db, "receitas", window.receitas[index].id),
+    { descricao, valor }
+  );
+};
 
-    await addDoc(collection(db, "receitas"), {
-        descricao: descricao,
-        valor: valor,
-        criadoEm: new Date()
-    });
+// EXCLUIR
+window.excluirReceita = async function (index) {
+  if (!confirm(`Excluir "${window.receitas[index].descricao}"?`)) return;
 
-    listarReceitas();
-}
-
-// CARREGAR RECEITA PARA EDIÇÃO
-function carregarReceita(index) {
-    painel.innerHTML = `
-        <br> Descrição: <input id="inp_descricao" value="${receitas[index].descricao}">
-        <br> Valor: <input id="inp_valor" value="${receitas[index].valor}">
-        <br> <button onclick="AlterarReceita(${index})">Alterar</button>
-    `;
-}
-
-// ALTERAR RECEITA
-async function AlterarReceita(index) {
-    const descricao = document.getElementById("inp_descricao").value;
-    const valor = Number(document.getElementById("inp_valor").value);
-
-    if (descricao === "") {
-        alert("Descrição inválida.");
-        return;
-    }
-
-    if (valor <= 0 || isNaN(valor)) {
-        alert("Valor inválido.");
-        return;
-    }
-
-    await updateDoc(
-        doc(db, "receitas", receitas[index].id),
-        {
-            descricao: descricao,
-            valor: valor
-        }
-    );
-
-    listarReceitas();
-}
-
-// EXCLUIR RECEITA
-async function excluirReceita(index) {
-    if (!confirm(`Você realmente deseja excluir "${receitas[index].descricao}"?`)) return;
-
-    await deleteDoc(
-        doc(db, "receitas", receitas[index].id)
-    );
-
-    listarReceitas();
-}
+  await deleteDoc(
+    doc(db, "receitas", window.receitas[index].id)
+  );
+};

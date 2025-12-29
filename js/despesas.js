@@ -1,119 +1,109 @@
-// Array em memória (vem do Firebase)
-let despesas = [];
+import { db } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const painel = document.getElementById("painel");
+const despesasRef = collection(db, "despesas");
+
+// 🔥 ARRAY GLOBAL REAL
+window.despesas = [];
+
+// 🔥 ESCUTA EM TEMPO REAL
+onSnapshot(despesasRef, (snapshot) => {
+  window.despesas = snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data()
+  }));
+
+  // só redesenha se o usuário estiver na aba despesas
+  if (painel.innerHTML.includes("Adicionar")) {
+    listarDespesas();
+  }
+});
 
 // LISTAR DESPESAS
-async function listarDespesas() {
-    const painel = document.getElementById("painel");
+window.listarDespesas = function () {
+  painel.innerHTML = `
+    <br>Descrição: <input id="inp_descricao">
+    <br>Valor: <input id="inp_valor">
+    <br><button onclick="AdicionarDespesas()">Adicionar</button>
+  `;
 
-    painel.innerHTML = `
-        <br> Descrição: <input id="inp_descricao">
-        <br> Valor: <input id="inp_valor">
-        <br> <button onclick="AdicionarDespesas()">Adicionar</button>
+  let total = 0;
+
+  window.despesas.forEach((d, i) => {
+    total += d.valor;
+
+    painel.innerHTML += `
+      <p>
+        <button class="btn-acao" onclick="carregarDespesas(${i})">✏️</button>
+        <button class="btn-acao excluir" onclick="excluirDespesas(${i})">✖️</button>
+        ${d.descricao} - R$ ${d.valor.toFixed(2)}
+      </p>
     `;
+  });
 
-    despesas = [];
-    let total = 0;
-
-    // Importa funções do Firestore
-    const { getDocs } = await import(
-        "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"
-    );
-
-    // Busca dados no Firebase
-    const snapshot = await getDocs(collection(db, "despesas"));
-
-    snapshot.forEach((doc) => {
-        despesas.push({
-            id: doc.id,
-            ...doc.data()
-        });
-    });
-
-    // Renderiza na tela
-    for (let i = 0; i < despesas.length; i++) {
-        total += despesas[i].valor;
-
-        painel.innerHTML += `
-            <p>
-                <button class="btn-acao" onclick="carregarDespesas(${i})">🖋️</button>
-                <button class="btn-acao excluir" onclick="excluirDespesas(${i})">✖️</button>
-                ${despesas[i].descricao} - R$ ${despesas[i].valor.toFixed(2)}
-            </p>
-        `;
-    }
-
-    painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`;
-}
+  painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`;
+};
 
 // ADICIONAR DESPESA
-async function AdicionarDespesas() {
-    const descricao = document.getElementById("inp_descricao").value;
-    const valor = Number(document.getElementById("inp_valor").value);
+window.AdicionarDespesas = async function () {
+  const descricao = document.getElementById("inp_descricao").value;
+  const valor = Number(document.getElementById("inp_valor").value);
 
-    if (descricao === "") {
-        alert("Descrição inválida.");
-        return;
-    }
+  if (descricao === "") {
+    alert("Descrição inválida.");
+    return;
+  }
 
-    if (valor <= 0 || isNaN(valor)) {
-        alert("Valor inválido.");
-        return;
-    }
+  if (valor <= 0 || isNaN(valor)) {
+    alert("Valor inválido.");
+    return;
+  }
 
-    await addDoc(collection(db, "despesas"), {
-        descricao: descricao,
-        valor: valor,
-        criadoEm: new Date()
-    });
-
-    listarDespesas();
-}
+  await addDoc(despesasRef, {
+    descricao,
+    valor,
+    criadoEm: new Date()
+  });
+};
 
 // CARREGAR PARA EDIÇÃO
-function carregarDespesas(index) {
-    painel.innerHTML = `
-        <br> Descrição: <input id="inp_descricao" value="${despesas[index].descricao}">
-        <br> Valor: <input id="inp_valor" value="${despesas[index].valor}">
-        <br> <button onclick="AlterarDespesas(${index})">Alterar</button>
-    `;
-}
+window.carregarDespesas = function (index) {
+  painel.innerHTML = `
+    <br>Descrição: <input id="inp_descricao" value="${window.despesas[index].descricao}">
+    <br>Valor: <input id="inp_valor" value="${window.despesas[index].valor}">
+    <br><button onclick="AlterarDespesas(${index})">Alterar</button>
+  `;
+};
 
 // ALTERAR DESPESA
-async function AlterarDespesas(index) {
-    let descricao = inp_descricao.value;
-    let valor = Number(inp_valor.value);
+window.AlterarDespesas = async function (index) {
+  const descricao = document.getElementById("inp_descricao").value;
+  const valor = Number(document.getElementById("inp_valor").value);
 
-    if (descricao === "") {
-        alert("Descrição inválida.");
-        return;
-    }
+  if (descricao === "" || valor <= 0 || isNaN(valor)) {
+    alert("Dados inválidos.");
+    return;
+  }
 
-    if (valor <= 0 || isNaN(valor)) {
-        alert("Valor inválido.");
-        return;
-    }
-
-    const { doc, updateDoc } = await import(
-        "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"
-    );
-
-    await updateDoc(
-        doc(db, "despesas", despesas[index].id),
-        { descricao, valor }
-    );
-
-    listarDespesas();
-}
+  await updateDoc(
+    doc(db, "despesas", window.despesas[index].id),
+    { descricao, valor }
+  );
+};
 
 // EXCLUIR DESPESA
-async function excluirDespesas(index) {
-    if (!confirm(`Deseja excluir "${despesas[index].descricao}"?`)) return;
+window.excluirDespesas = async function (index) {
+  if (!confirm(`Excluir "${window.despesas[index].descricao}"?`)) return;
 
-    const { doc, deleteDoc } = await import(
-        "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"
-    );
-
-    await deleteDoc(doc(db, "despesas", despesas[index].id));
-
-    listarDespesas();
-}
+  await deleteDoc(
+    doc(db, "despesas", window.despesas[index].id)
+  );
+};

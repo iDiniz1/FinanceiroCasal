@@ -1,67 +1,38 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>ControlFin</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <title>ControlFin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
 <div class="container">
+  <header class="header">
+    <img src="img/casal.png" alt="Casal">
+    <h1>ControlFin</h1>
+    <p>Organizando sonhos, planos e finanças a dois 💚</p>
+  </header>
 
-    <!-- HEADER -->
-    <header class="header">
-        <img src="img/casal.png" alt="Casal">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <h1>ControlFin</h1>
-        <p>Organizando sonhos, planos e finanças a dois 💚</p>
-    </header>
+  <nav class="menu">
+    <button onclick="listarReceitas()">Receitas</button>
+    <button onclick="listarDespesas()">Despesas</button>
+    <button onclick="listarBalanco()">Balanço</button>
+  </nav>
 
-    <!-- MENU -->
-    <nav class="menu">
-        <button onclick="listarReceitas()">Receitas</button>
-        <button onclick="listarDespesas()">Despesas</button>
-        <button onclick="listarBalanco()">Balanço</button>
-    </nav>
-
-    <!-- PAINEL -->
-    <div id="painel">
-        <p class="boas-vindas">
-            Bem-vindos ao <b style="color: green;">LiliusFIN.</b> Escolha uma opção acima para começar.
-        </p>
-    </div>
-
+  <div id="painel">
+    <p class="boas-vindas">
+      Bem-vindos ao <b style="color: green;">LiliusFIN.</b>
+    </p>
+  </div>
 </div>
 
-<script src="js/receitas.js"></script>
-<script src="js/despesas.js"></script>
-<script src="js/balanco.js"></script>
+<!-- TODOS como módulo -->
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/despesas.js"></script>
+<script type="module" src="js/receitas.js"></script>
+<script type="module" src="js/balanco.js"></script>
+
 </body>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyDIeR1aF8rR2qs6l_Oo_eez8sJFrEgjy2s",
-    authDomain: "financas-afe61.firebaseapp.com",
-    projectId: "financas-afe61",
-    storageBucket: "financas-afe61.firebasestorage.app",
-    messagingSenderId: "625744485806",
-    appId: "1:625744485806:web:9f9ab3d7a0ab18e807fc3f"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // deixa o db global
-  window.db = db;
-  window.addDoc = addDoc;
-  window.collection = collection;
-  window.getDocs = getDocs;
-  window.doc = doc;
-  window.updateDoc = updateDoc;
-  window.deleteDoc = deleteDoc;
-
-</script>
-
 </html>
