@@ -1,26 +1,48 @@
-function listarBalanco(){
-    painel.innerHTML = '';
-         
+async function listarBalanco() {
+    const painel = document.getElementById("painel");
+    painel.innerHTML = "";
+
     let total = 0;
-    painel.innerHTML += '<h2>Receitas</h2>'; /* receitas */
-    for (let i = 0; i <receitas.length; i++) {
-    total += receitas[i].valor;
-    painel.innerHTML +=  
-        `<p>  
-            ${receitas[i].descricao} -
-             R$ ${receitas[i].valor.toFixed(2)} 
-         </p>`;
-    }
 
-    painel.innerHTML += '<h2>Despesas</h2>'; /* despesas */
-    for (let i = 0; i <despesas.length; i++) {
-    total -= despesas[i].valor;
-    painel.innerHTML +=  
-        `<p> 
-            ${despesas[i].descricao} -
-             R$ ${despesas[i].valor.toFixed(2)} 
-         </p>`;
-    }
-    painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`
+    /* ===== RECEITAS ===== */
+    painel.innerHTML += "<h2>Receitas</h2>";
 
+    const receitasSnapshot = await getDocs(collection(db, "receitas"));
+
+    receitasSnapshot.forEach((docSnap) => {
+        const receita = docSnap.data();
+        total += receita.valor;
+
+        painel.innerHTML += `
+            <p>
+                ${receita.descricao} -
+                R$ ${receita.valor.toFixed(2)}
+            </p>
+        `;
+    });
+
+    /* ===== DESPESAS ===== */
+    painel.innerHTML += "<h2>Despesas</h2>";
+
+    const despesasSnapshot = await getDocs(collection(db, "despesas"));
+
+    despesasSnapshot.forEach((docSnap) => {
+        const despesa = docSnap.data();
+        total -= despesa.valor;
+
+        painel.innerHTML += `
+            <p>
+                ${despesa.descricao} -
+                R$ ${despesa.valor.toFixed(2)}
+            </p>
+        `;
+    });
+
+    /* ===== TOTAL ===== */
+    painel.innerHTML += `
+        <p>
+            <b>Total:</b>
+            R$ ${total.toFixed(2)}
+        </p>
+    `;
 }

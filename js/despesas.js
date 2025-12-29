@@ -1,85 +1,119 @@
-let despesas = JSON.parse(localStorage.getItem('despesas')) || [];
-/* Se caso falhar (despesas não existir) usamos o || para retornar o array vazio */
- /* converte string para objeto */
-/* localStorage.getItem('despesas') */
-/* implementação de dados do proprio site */ 
-/* Só armazena string fazer conversão. Quando uma opção armazena varias informações agrupamos tudo dentro de 1 objeto */
-/* La la embaixo vamos fazer salvar o array */
-function listarDespesas(){
-    painel.innerHTML = 
-        `<br> Descrição: <input id="inp_descricao">
-         <br> Valor: <input id="inp_valor">
-         <br> <button onclick="AdicionarDespesas()">Adicionar</button>`;
+// Array em memória (vem do Firebase)
+let despesas = [];
+
+// LISTAR DESPESAS
+async function listarDespesas() {
+    const painel = document.getElementById("painel");
+
+    painel.innerHTML = `
+        <br> Descrição: <input id="inp_descricao">
+        <br> Valor: <input id="inp_valor">
+        <br> <button onclick="AdicionarDespesas()">Adicionar</button>
+    `;
+
+    despesas = [];
     let total = 0;
 
-    for (let i = 0; i <despesas.length; i++) {
-    total += despesas[i].valor;
-    painel.innerHTML +=  
-        `<p> 
-            <button class="btn-acao" onClick="carregarDespesas(${i})">🖋️</button>
-            <button class="btn-acao excluir" onClick="excluirDespesas(${i})">✖️</button>
-            ${despesas[i].descricao} -
-             R$ ${despesas[i].valor.toFixed(2)} 
-         </p>`;
+    // Importa funções do Firestore
+    const { getDocs } = await import(
+        "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"
+    );
+
+    // Busca dados no Firebase
+    const snapshot = await getDocs(collection(db, "despesas"));
+
+    snapshot.forEach((doc) => {
+        despesas.push({
+            id: doc.id,
+            ...doc.data()
+        });
+    });
+
+    // Renderiza na tela
+    for (let i = 0; i < despesas.length; i++) {
+        total += despesas[i].valor;
+
+        painel.innerHTML += `
+            <p>
+                <button class="btn-acao" onclick="carregarDespesas(${i})">🖋️</button>
+                <button class="btn-acao excluir" onclick="excluirDespesas(${i})">✖️</button>
+                ${despesas[i].descricao} - R$ ${despesas[i].valor.toFixed(2)}
+            </p>
+        `;
     }
-    painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`
 
-}
-function AdicionarDespesas(){
-
-      let descricao    = inp_descricao.value;
-      let valor   = Number(inp_valor.value);
-      
-      if (descricao == '') {
-        alert('Descrição invalida.');
-      } else if 
-      (valor <= 0 || isNaN(valor)) { 
-        alert ('Valor inválido.');
-      }  else {
-        despesas.push( {descricao, valor});
-        /* aqui */ 
-        localStorage.setItem('despesas', JSON.stringify(despesas)); /* AGORA FIZEMOS O PROCESSO INVERSO ESTAMOS CONVERTENDO O OBJETO EM UMA STRING PQ O SALVAR SÓ ACEITA STRING */
-        listarDespesas();
-      }
+    painel.innerHTML += `<p><b>Total:</b> R$ ${total.toFixed(2)}</p>`;
 }
 
-function carregarDespesas(index){
-painel.innerHTML = 
-        `<br> Descrição: <input id="inp_descricao" value="${despesas[index].descricao}">
-         <br> Valor: <input id="inp_valor" value="${despesas[index].valor}">
-         <br> <button onclick="AlterarDespesas(${index})">Alterar</button>`;
-}
-    
-function AlterarDespesas(index){
+// ADICIONAR DESPESA
+async function AdicionarDespesas() {
+    const descricao = document.getElementById("inp_descricao").value;
+    const valor = Number(document.getElementById("inp_valor").value);
 
-      let descricao    = inp_descricao.value;
-      let valor   = Number(inp_valor.value);
-    
-      
-      if (descricao == '') {
-        alert('Descrição invalida.');
-      } else if 
-      (valor <= 0 || isNaN(valor)) { 
-        alert ('Valor inválido.');
-      } else {
-        despesas[index] = {descricao, valor};
-        /* aqui */ 
-        localStorage.setItem('despesas', JSON.stringify(despesas)); /* AGORA FIZEMOS O PROCESSO INVERSO ESTAMOS CONVERTENDO O OBJETO EM UMA STRING PQ O SALVAR SÓ ACEITA STRING */
-        listarDespesas();
-      }
+    if (descricao === "") {
+        alert("Descrição inválida.");
+        return;
     }
- function excluirDespesas(index){
-    if (confirm(`Você realmente deseja excluir "${despesas[index].descricao}"?`)) {
-        despesas.splice(index, 1);
-        localStorage.setItem('despesas', JSON.stringify(despesas)); /* AGORA FIZEMOS O PROCESSO INVERSO ESTAMOS CONVERTENDO O OBJETO EM UMA STRING PQ O SALVAR SÓ ACEITA STRING */
-        listarDespesas();
+
+    if (valor <= 0 || isNaN(valor)) {
+        alert("Valor inválido.");
+        return;
     }
- }
-/* ISNAN é quando o valor não é um numero */                     
-/* TOFIXED aparece duas casas valor decimal */
 
+    await addDoc(collection(db, "despesas"), {
+        descricao: descricao,
+        valor: valor,
+        criadoEm: new Date()
+    });
 
-/* PRO CONSOLE 
-localStorage.clear() - limpa tudo
-removeItem() - limpa item por item
-*/
+    listarDespesas();
+}
+
+// CARREGAR PARA EDIÇÃO
+function carregarDespesas(index) {
+    painel.innerHTML = `
+        <br> Descrição: <input id="inp_descricao" value="${despesas[index].descricao}">
+        <br> Valor: <input id="inp_valor" value="${despesas[index].valor}">
+        <br> <button onclick="AlterarDespesas(${index})">Alterar</button>
+    `;
+}
+
+// ALTERAR DESPESA
+async function AlterarDespesas(index) {
+    let descricao = inp_descricao.value;
+    let valor = Number(inp_valor.value);
+
+    if (descricao === "") {
+        alert("Descrição inválida.");
+        return;
+    }
+
+    if (valor <= 0 || isNaN(valor)) {
+        alert("Valor inválido.");
+        return;
+    }
+
+    const { doc, updateDoc } = await import(
+        "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"
+    );
+
+    await updateDoc(
+        doc(db, "despesas", despesas[index].id),
+        { descricao, valor }
+    );
+
+    listarDespesas();
+}
+
+// EXCLUIR DESPESA
+async function excluirDespesas(index) {
+    if (!confirm(`Deseja excluir "${despesas[index].descricao}"?`)) return;
+
+    const { doc, deleteDoc } = await import(
+        "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js"
+    );
+
+    await deleteDoc(doc(db, "despesas", despesas[index].id));
+
+    listarDespesas();
+}

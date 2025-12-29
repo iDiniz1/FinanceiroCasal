@@ -37,19 +37,31 @@
 <script src="js/despesas.js"></script>
 <script src="js/balanco.js"></script>
 </body>
-<script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"></script>
-<script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
   const firebaseConfig = {
     apiKey: "AIzaSyDIeR1aF8rR2qs6l_Oo_eez8sJFrEgjy2s",
     authDomain: "financas-afe61.firebaseapp.com",
     projectId: "financas-afe61",
     storageBucket: "financas-afe61.firebasestorage.app",
     messagingSenderId: "625744485806",
-    appId: "1:625744485806:web:9f9ab3d7a0ab18e807fc3f",
-    measurementId: "G-DR197VTWK6"
+    appId: "1:625744485806:web:9f9ab3d7a0ab18e807fc3f"
   };
-  firebase.initializeA(firebaseConfig);
-  /* teste */
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // deixa o db global
+  window.db = db;
+  window.addDoc = addDoc;
+  window.collection = collection;
+  window.getDocs = getDocs;
+  window.doc = doc;
+  window.updateDoc = updateDoc;
+  window.deleteDoc = deleteDoc;
+
 </script>
-</script>
+
 </html>
