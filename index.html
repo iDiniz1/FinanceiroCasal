@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ControlFin</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+        <img src="img/casal.png" alt="Casal">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <h1>ControlFin</h1>
+        <p>Organizando sonhos, planos e finanças a dois 💚</p>
+    </header>
+
+    <!-- MENU -->
+    <nav class="menu">
+        <button onclick="listarReceitas()">Receitas</button>
+        <button onclick="listarDespesas()">Despesas</button>
+        <button onclick="listarBalanco()">Balanço</button>
+    </nav>
+
+    <!-- PAINEL -->
+    <div id="painel">
+        <p class="boas-vindas">
+            Bem-vindos ao <b style="color: green;">LiliusFIN.</b> Escolha uma opção acima para começar.
+        </p>
+    </div>
+
+</div>
+
+<script src="js/receitas.js"></script>
+<script src="js/despesas.js"></script>
+<script src="js/balanco.js"></script>
+</body>
+<script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDIeR1aF8rR2qs6l_Oo_eez8sJFrEgjy2s",
+    authDomain: "financas-afe61.firebaseapp.com",
+    projectId: "financas-afe61",
+    storageBucket: "financas-afe61.firebasestorage.app",
+    messagingSenderId: "625744485806",
+    appId: "1:625744485806:web:9f9ab3d7a0ab18e807fc3f",
+    measurementId: "G-DR197VTWK6"
+  };
+  firebase.initializeA(firebaseConfig);
+</script>
+</script>
+</html>
